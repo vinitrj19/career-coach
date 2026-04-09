@@ -1376,12 +1376,25 @@
     // ─── API CONFIGURATION ──────────────────────────────────────────────
     // When your backend is deployed to cloud (e.g. Google Cloud Run),
     // paste the cloud backend URL below:
-    const CLOUD_BACKEND_URL = "https://parachute-playmate-acting.ngrok-free.dev";
+    const CLOUD_BACKEND_URL = "https://career-coach-backend-og0r.onrender.com";
 
     const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
       ? "http://localhost:3001"
       : CLOUD_BACKEND_URL;
 
+    // ─── DEMO MODE OVERRIDE ──────────────────────────────────────────
+    const DEMO_USER = {
+      id: "demo-user",
+      email: "demo@careercoach.ai",
+      name: "Demo User"
+    };
+
+    const DEMO_SESSION = { user: DEMO_USER };
+    window.session = DEMO_SESSION;
+
+    let sessionId = DEMO_USER.id;
+    let sessionData = {};
+    let userProfile = DEMO_USER;
     // ─── PDF.js SETUP ────────────────────────────────────────────────
     if (window.pdfjsLib) {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1452,13 +1465,10 @@
         }
       });
     });
-    let sessionId = null;
-    let sessionData = {};
-
-    // ─── SUPABASE AUTH CONFIG ──────────────────────────────────────────
+    // ─── SUPABASE AUTH CONFIG (BYPASSED) ───────────────────────────
     const SUPABASE_URL = "https://ugcfourespiwzqwxjlyq.supabase.co";
     const SUPABASE_KEY = "sb_publishable_mbKyhopSFvsU1LMiUpvV_Q_fWIlTQka";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ─── AUTHENTICATION ────────────────────────────────────────────────
     let userProfile = null;
@@ -1501,13 +1511,25 @@
       }
     }
 
-    // On page load, just show the login modal normally
+    const DEMO_USER = {
+      id: "demo-user",
+      email: "demo@careercoach.ai",
+      name: "Demo User"
+    };
+
+    // On page load, bypass auth for Vercel demo
     function checkAuth() {
-      document.getElementById('loginModal').style.display = 'flex';
+      const loginModal = document.getElementById('loginModal');
+      if (loginModal) loginModal.style.display = 'none';
+
+      const fullName = DEMO_USER.name;
+      document.getElementById('userDisplay').textContent = fullName;
+
+      // Force load the dashboard with backend pre-config
+      init();
     }
 
-    async function logout() {
-      await supabaseClient.auth.signOut();
+    function logout() {
       window.location.reload();
     }
 
@@ -1714,7 +1736,7 @@
         const response = await fetch(`${API}/agent-trigger`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, message: text })
+          body: JSON.stringify({ sessionId: DEMO_USER.id, message: text })
         });
         const data = await response.json();
         removeLoadingMessage();
@@ -1737,7 +1759,8 @@
       const resume = document.getElementById('resumeInput').value.trim();
       if (!role) return alert('Please select a target role first');
       if (!resume) return alert('Please paste your resume text');
-      if (!sessionId) return alert('Session not initialized');
+      
+      const user = window.session?.user || DEMO_USER;
 
       const btn = document.getElementById('analyzeBtn');
       btn.disabled = true;
@@ -1749,7 +1772,7 @@
         const res = await fetch(`${API}/analyze-resume`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, resumeText: resume, role })
+          body: JSON.stringify({ sessionId: user.id, resumeText: resume, role })
         });
         const data = await res.json();
         removeLoadingMessage();
@@ -1846,7 +1869,7 @@
         const res = await fetch(`${API}/generate-plan`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, userGoals })
+          body: JSON.stringify({ sessionId: DEMO_USER.id, userGoals })
         });
         const data = await res.json();
         removeLoadingMessage();
@@ -1909,7 +1932,7 @@
         const res = await fetch(`${API}/update-progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, taskId, status })
+          body: JSON.stringify({ sessionId: DEMO_USER.id, taskId, status })
         });
         const data = await res.json();
         sessionData.plan = data.plan;
@@ -1935,7 +1958,7 @@
         const res = await fetch(`${API}/agent-trigger`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId })
+          body: JSON.stringify({ sessionId: DEMO_USER.id })
         });
         const data = await res.json();
         removeLoadingMessage();
@@ -1964,10 +1987,10 @@
     let totalQuestions = 0;
 
     async function startInterview() {
-      if (!sessionId || !sessionData.role) {
+      if (!sessionData.role) {
         switchTab('chat');
         addMessage('system', 'Please analyze your resume first before starting the interview!', '⚠️');
-        return switchTab('interview');
+        return;
       }
       document.getElementById('interviewStart').style.display = 'none';
       document.getElementById('interviewActive').style.display = 'block';
@@ -1977,7 +2000,7 @@
         const res = await fetch(`${API}/mock-interview`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId })
+          body: JSON.stringify({ sessionId: DEMO_USER.id })
         });
         const data = await res.json();
         currentQuestion = data.question;
@@ -2040,7 +2063,7 @@
         const res = await fetch(`${API}/evaluate-answer`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, answer: selectedAnswer })
+          body: JSON.stringify({ sessionId: DEMO_USER.id, answer: selectedAnswer })
         });
         const data = await res.json();
 
@@ -2115,9 +2138,8 @@
 
     // ─── AGENT LOGS ──────────────────────────────────────────────────
     async function refreshLogs() {
-      if (!sessionId) return;
       try {
-        const res = await fetch(`${API}/agent-logs/${sessionId}`);
+        const res = await fetch(`${API}/agent-logs/${DEMO_USER.id}`);
         const data = await res.json();
         const el = document.getElementById('agentLogList');
         if (!data.logs.length) {
@@ -2145,17 +2167,16 @@
     let agentLoopCount = 0;
 
     async function autonomousAgentLoop() {
-      if (!sessionId) return; // No session yet
       if (!sessionData.role) return; // No resume analyzed yet
 
       agentLoopCount++;
-      console.log(`[AGENT LOOP] Cycle #${agentLoopCount} — checking session ${sessionId}`);
+      console.log(`[AGENT LOOP] Cycle #${agentLoopCount} — checking session ${DEMO_USER.id}`);
 
       try {
         const res = await fetch(`${API}/agent-trigger`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId })
+          body: JSON.stringify({ sessionId: DEMO_USER.id })
         });
         const data = await res.json();
 

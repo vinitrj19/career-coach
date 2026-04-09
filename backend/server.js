@@ -22,8 +22,28 @@ const roleRequirements = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../data/role_requirements.json'), 'utf-8')
 );
 
-
 const supabase = require('./agent/supabaseClient');
+
+// ─── DEMO USER (NO-AUTH MODE) ────────────────────────────────────
+const DEMO_USER = {
+  id: "demo-user",
+  email: "demo@careercoach.ai",
+  name: "Demo User"
+};
+
+// Safe helper: auto-create session if it doesn't exist
+function getOrCreateSession(sessionId) {
+  let session = getSession(sessionId);
+  if (!session) {
+    session = createSession(
+      sessionId,
+      sessionId === DEMO_USER.id ? DEMO_USER.email : `${sessionId}@demo.com`,
+      sessionId === DEMO_USER.id ? DEMO_USER.name : sessionId
+    );
+    console.log(`[DEMO] Auto-created session for: ${sessionId}`);
+  }
+  return session;
+}
 
 // ─── SESSION INIT ────────────────────────────────────────────────
 app.post('/session/create', (req, res) => {
@@ -42,20 +62,23 @@ app.post('/session/create', (req, res) => {
 });
 
 app.get('/session/:sessionId', (req, res) => {
-  const session = getSession(req.params.sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const session = getOrCreateSession(req.params.sessionId);
   res.json(session);
 });
 
 // ─── RESUME ANALYSIS ────────────────────────────────────────────
 app.post('/analyze-resume', async (req, res) => {
-  const { sessionId, resumeText, role } = req.body;
-  if (!sessionId || !resumeText || !role) {
-    return res.status(400).json({ error: 'sessionId, resumeText, and role are required' });
+  const { resumeText, role } = req.body;
+  const sessionId = req.body.sessionId || DEMO_USER.id;
+  if (!resumeText || !role) {
+    return res.status(400).json({ error: 'resumeText and role are required' });
   }
   if (!roleRequirements[role]) {
     return res.status(400).json({ error: `Unknown role. Choose from: ${Object.keys(roleRequirements).join(', ')}` });
   }
+
+  // Ensure session exists before updating state
+  getOrCreateSession(sessionId);
 
   try {
     console.log(`[AGENT] Analyzing resume for session ${sessionId}, role: ${role}`);
@@ -81,9 +104,9 @@ app.post('/analyze-resume', async (req, res) => {
 
 // ─── GENERATE PLAN ──────────────────────────────────────────────
 app.post('/generate-plan', async (req, res) => {
-  const { sessionId, userGoals } = req.body;
-  const session = getSession(sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const sessionId = req.body.sessionId || DEMO_USER.id;
+  const { userGoals } = req.body;
+  const session = getOrCreateSession(sessionId);
 
   try {
     console.log(`[AGENT] Generating plan for session ${sessionId} with goals:`, userGoals);
@@ -116,9 +139,9 @@ app.post('/generate-plan', async (req, res) => {
 
 // ─── UPDATE PROGRESS ────────────────────────────────────────────
 app.post('/update-progress', (req, res) => {
-  const { sessionId, taskId, status } = req.body;
-  const session = getSession(sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const sessionId = req.body.sessionId || DEMO_USER.id;
+  const { taskId, status } = req.body;
+  const session = getOrCreateSession(sessionId);
 
   const updatedPlan = session.plan.map(task =>
     task.id === taskId ? { ...task, status, completedAt: status === 'completed' ? Date.now() : null } : task
@@ -147,9 +170,8 @@ app.post('/update-progress', (req, res) => {
 
 // ─── AGENT TRIGGER ──────────────────────────────────────────────
 app.post('/agent-trigger', async (req, res) => {
-  const { sessionId } = req.body;
-  const session = getSession(sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const sessionId = req.body.sessionId || DEMO_USER.id;
+  const session = getOrCreateSession(sessionId);
 
   try {
     console.log(`[AGENT] Running agent loop for session ${sessionId}`);
@@ -170,9 +192,8 @@ app.post('/agent-trigger', async (req, res) => {
 
 // ─── START QUIZ (Replaces Mock Interview) ────────────────────────
 app.post('/mock-interview', async (req, res) => {
-  const { sessionId } = req.body;
-  const session = getSession(sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const sessionId = req.body.sessionId || DEMO_USER.id;
+  const session = getOrCreateSession(sessionId);
 
   try {
     // Load local question bank
@@ -220,9 +241,9 @@ app.post('/mock-interview', async (req, res) => {
 
 // ─── SUBMIT ANSWER (Replaces Evaluate Answer) ───────────────────
 app.post('/evaluate-answer', async (req, res) => {
-  const { sessionId, answer } = req.body;
-  const session = getSession(sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const sessionId = req.body.sessionId || DEMO_USER.id;
+  const { answer } = req.body;
+  const session = getOrCreateSession(sessionId);
 
   const { interviewState } = session;
   if (!interviewState.active) return res.status(400).json({ error: 'No active quiz' });
@@ -299,8 +320,7 @@ app.post('/evaluate-answer', async (req, res) => {
 
 // ─── AGENT LOGS ─────────────────────────────────────────────────
 app.get('/agent-logs/:sessionId', (req, res) => {
-  const session = getSession(req.params.sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const session = getOrCreateSession(req.params.sessionId);
   res.json({ logs: session.agentLogs, triggered: session.agentTriggered });
 });
 
@@ -403,8 +423,8 @@ app.get('/admin/analytics', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
+
 app.listen(PORT, () => {
-  console.log(`\n🚀 Career Coach Backend running on port ${PORT}`);
-  console.log(`📋 Available roles: ${Object.keys(roleRequirements).join(', ')}`);
-  console.log(`🤖 Agent system: ACTIVE\n`);
+  console.log(`🚀 Career Coach Backend running on port ${PORT}`);
+  console.log(`🤖 Agent system: ACTIVE`);
 });
