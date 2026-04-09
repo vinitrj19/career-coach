@@ -1,0 +1,10 @@
+{
+  "name": "agentic-ai-career-coach",
+  "version": "1.0.0",
+  "description": "Hackathon-ready Agentic AI Career Coach",
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "start:backend": "cd backend && npm start",
+    "dev:backend": "cd backend && npm run dev"
+  }
+}

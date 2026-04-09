@@ -1,0 +1,66 @@
+{
+  "DSA": [
+    {
+      "id": 1,
+      "question": "What is the worst-case time complexity of QuickSort?",
+      "type": "mcq",
+      "options": ["O(n)", "O(n log n)", "O(n^2)", "O(log n)"],
+      "correct_answer": "O(n^2)",
+      "explanation": "In the worst case (e.g., already sorted array with poor pivot choices), QuickSort degrades to O(n^2)."
+    },
+    {
+      "id": 2,
+      "question": "Which data structure uses LIFO (Last In First Out)?",
+      "type": "mcq",
+      "options": ["Queue", "Stack", "Linked List", "Binary Tree"],
+      "correct_answer": "Stack",
+      "explanation": "A stack pushes and pops elements from the top, making it Last In First Out."
+    },
+    {
+      "id": 3,
+      "question": "What is the time complexity of searching in a perfectly balanced Binary Search Tree?",
+      "type": "mcq",
+      "options": ["O(1)", "O(n)", "O(log n)", "O(n log n)"],
+      "correct_answer": "O(log n)",
+      "explanation": "Because it's perfectly balanced, each comparison halves the remaining nodes."
+    }
+  ],
+  "System Design": [
+    {
+      "id": 4,
+      "question": "Which strategy ensures that repeated database reads return the same data across cache nodes?",
+      "type": "mcq",
+      "options": ["Write-Through Cache", "Cache Invalidation", "Eventual Consistency", "Consistency Hashing"],
+      "correct_answer": "Write-Through Cache",
+      "explanation": "Write-through updates the cache and the backing store simultaneously."
+    },
+    {
+      "id": 5,
+      "question": "What is a primary advantage of Microservices over a Monolith?",
+      "type": "mcq",
+      "options": ["Easier transactional consistency", "Single deployment unit", "Independent scalability", "Zero network latency"],
+      "correct_answer": "Independent scalability",
+      "explanation": "Microservices can be scaled independently based on their unique load profiles."
+    }
+  ],
+  "React": [
+    {
+      "id": 6,
+      "question": "What hook replaces lifecycle methods like componentDidMount?",
+      "type": "mcq",
+      "options": ["useState", "useMemo", "useEffect", "useRef"],
+      "correct_answer": "useEffect",
+      "explanation": "useEffect with an empty dependency array behaves like componentDidMount."
+    }
+  ],
+  "Python": [
+    {
+      "id": 7,
+      "question": "What is the output of 'print(type([]))' in Python 3?",
+      "type": "mcq",
+      "options": ["<class 'list'>", "<class 'array'>", "<class 'dict'>", "<type 'list'>"],
+      "correct_answer": "<class 'list'>",
+      "explanation": "Python represents lists natively as <class 'list'>."
+    }
+  ]
+}

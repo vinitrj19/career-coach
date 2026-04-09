@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic AI Career Coach</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --surface3: #22222f;
+      --border: #2a2a3a;
+      --accent: #7c3aed;
+      --accent2: #a78bfa;
+      --accent3: #4f46e5;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --orange: #f97316;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --text3: #64748b;
+      --agent-color: #f97316;
+      --agent-glow: rgba(249, 115, 22, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .session-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text3);
+      background: var(--surface2);
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    /* AGENT ACTION BANNER */
+    #agentBanner {
+      display: none;
+      background: linear-gradient(90deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
+      border-bottom: 2px solid var(--agent-color);
+      padding: 10px 24px;
+      animation: bannerSlide 0.4s ease;
+      flex-shrink: 0;
+    }
+
+    #agentBanner.visible {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    @keyframes bannerSlide {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .banner-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .banner-icon {
+      font-size: 20px;
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: rotate(0);
+      }
+
+      25% {
+        transform: rotate(-10deg);
+      }
+
+      75% {
+        transform: rotate(10deg);
+      }
+    }
+
+    .banner-title {
+      font-weight: 700;
+      color: var(--agent-color);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .banner-sub {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .banner-close {
+      background: none;
+      border: none;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+    }
+
+    .agent-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      background: var(--agent-color);
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      animation: glow 1.5s infinite;
+    }
+
+    @keyframes glow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 var(--agent-glow);
+      }
+
+      50% {
+        box-shadow: 0 0 12px 4px var(--agent-glow);
+      }
+    }
+
+    /* MAIN LAYOUT */
+    .main {
+      display: grid;
+      grid-template-columns: 340px 1fr 300px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* PANELS */
+    .panel {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel:last-child {
+      border-right: none;
+    }
+
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .panel-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .panel-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .panel-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    /* LEFT PANEL - Resume + Skills */
+    .role-select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+
+    .role-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .role-select option {
+      background: var(--surface2);
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      resize: none;
+      line-height: 1.6;
+      min-height: 180px;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    textarea::placeholder {
+      color: var(--text3);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 11px 16px;
+      border-radius: 8px;
+      border: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    .btn-agent {
+      background: linear-gradient(135deg, #ea580c, #f97316);
+      color: white;
+      animation: agentPulse 2s infinite;
+    }
+
+    @keyframes agentPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 12px 4px rgba(249, 115, 22, 0.2);
+      }
+    }
+
+    /* SKILLS DISPLAY */
+    .skills-section {
+      margin-top: 16px;
+    }
+
+    .skills-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+
+    .skill-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .chip-strong {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .chip-moderate {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--yellow);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .chip-weak {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* READINESS SCORE */
+    .score-ring {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .score-number {
+      font-size: 32px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--accent2);
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    /* MIDDLE PANEL - Chat */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    .message {
+      max-width: 90%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+      animation: msgIn 0.3s ease;
+    }
+
+    @keyframes msgIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message-system {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      align-self: flex-start;
+    }
+
+    .message-user {
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      color: white;
+      align-self: flex-end;
+    }
+
+    .message-agent {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
+      border: 1px solid rgba(249, 115, 22, 0.4);
+      color: var(--text);
+      align-self: flex-start;
+    }
+
+    .message-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      opacity: 0.7;
+    }
+
+    .chat-input-area {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      resize: none;
+      max-height: 100px;
+      min-height: 40px;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .send-btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .send-btn:hover {
+      background: var(--accent3);
+    }
+
+    /* RIGHT PANEL - Tasks + Agent */
+    .task-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+
+    .task-item:hover {
+      border-color: var(--accent);
+    }
+
+    .task-day-badge {
+      font-size: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--accent2);
+      background: rgba(124, 58, 237, 0.1);
+      padding: 2px 8px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
+    .task-name {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .task-meta {
+      font-size: 11px;
+      color: var(--text3);
+      display: flex;
+      gap: 10px;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .task-btn {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .task-btn-done {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .task-btn-done:hover {
+      background: rgba(16, 185, 129, 0.3);
+    }
+
+    .task-btn-miss {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .task-btn-miss:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .task-status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-top: 6px;
+    }
+
+    .status-completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+    }
+
+    .status-missed {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+    }
+
+    .status-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--yellow);
+    }
+
+    .status-nudged {
+      background: rgba(249, 115, 22, 0.15);
+      color: var(--orange);
+    }
+
+    /* AGENT LOG */
+    .agent-log-item {
+      background: rgba(249, 115, 22, 0.05);
+      border: 1px solid rgba(249, 115, 22, 0.2);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .agent-log-action {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--agent-color);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .agent-log-time {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* INTERVIEW */
+    .interview-question {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .question-num {
+      font-size: 11px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+
+    .question-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .eval-result {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .score-big {
+      font-size: 36px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .score-good {
+      color: var(--green);
+    }
+
+    .score-mid {
+      color: var(--yellow);
+    }
+
+    .score-bad {
+      color: var(--red);
+    }
+
+    /* GAP ANALYSIS */
+    .gap-section {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .gap-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+
+    /* LOADING */
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text3);
+      font-size: 13px;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+    }
+
+    .empty-state {
+      color: var(--text3);
+      font-size: 13px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    /* PDF UPLOAD ZONE */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 12px;
+      background: var(--surface2);
+      position: relative;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--accent2);
+      background: rgba(124, 58, 237, 0.08);
+    }
+
+    .upload-zone .upload-icon {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .upload-zone .upload-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .upload-zone .upload-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    .upload-zone input[type=file] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .upload-zone.success {
+      border-color: var(--green);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .upload-zone.loading {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .upload-filename {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--green);
+      margin-top: 6px;
+      word-break: break-all;
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .or-divider::before,
+    .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .tab {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text3);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+
+    .tab.active {
+      color: var(--accent2);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+      flex: 1;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    .progress-bar-wrap {
+      background: var(--surface3);
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* Responsive tweaks for smaller screens */
+    @media (max-width: 1100px) {
+      .main {
+        grid-template-columns: 300px 1fr 260px;
+      }
+    }
+
+    /* ONBOARDING MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      width: 400px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-box h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .modal-box p {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 24px;
+    }
+
+    .modal-group {
+      margin-bottom: 16px;
+    }
+
+    .modal-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .modal-group input,
+    .modal-group select {
+      width: 100%;
+      padding: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    /* GLASSMORPHISM DESIGN SYSTEM UPGRADE */
+    :root {
+      --bg: #050510;
+      --surface: rgba(25, 25, 40, 0.4);
+      --surface2: rgba(255, 255, 255, 0.05);
+      --surface3: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Applying blur to panels to create the glass effect */
+    .header,
+    .panel,
+    .modal-box,
+    .tabs {
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      background: var(--surface) !important;
+    }
+
+    /* Inputs inside glass */
+    .role-select,
+    textarea,
+    input,
+    select {
+      background: rgba(0, 0, 0, 0.2) !important;
+      backdrop-filter: blur(10px);
+    }
+
+    /* Animated Background Blobs */
+    .glass-blob-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      z-index: -1;
+      pointer-events: none;
+      background: #030308;
+    }
+
+    .glass-blob {
+      position: absolute;
+      filter: blur(120px);
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+
+    .blob-1 {
+      top: -10%;
+      left: -10%;
+      width: 600px;
+      height: 600px;
+      background: var(--accent3);
+      animation: blobAnim1 20s infinite alternate;
+    }
+
+    .blob-2 {
+      bottom: -10%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: var(--accent);
+      animation: blobAnim2 25s infinite alternate-reverse;
+    }
+
+    .blob-3 {
+      top: 40%;
+      left: 50%;
+      width: 400px;
+      height: 400px;
+      background: rgba(16, 185, 129, 0.15);
+      /* subtle green */
+      animation: blobAnim3 30s infinite alternate;
+    }
+
+    @keyframes blobAnim1 {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      100% {
+        transform: translate(150px, 100px) scale(1.2);
+      }
+    }
+
+    @keyframes blobAnim2 {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      100% {
+        transform: translate(-150px, -100px) scale(1.1);
+      }
+    }
+
+    @keyframes blobAnim3 {
+      0% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+      }
+
+      100% {
+        transform: translate(-30%, -30%) scale(1.5) rotate(90deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- GLASSMORPHISM BACKGROUND -->
+  <div class="glass-blob-container">
+    <div class="glass-blob blob-1"></div>
+    <div class="glass-blob blob-2"></div>
+    <div class="glass-blob blob-3"></div>
+  </div>
+
+  <!-- LOGIN MODAL -->
+  <div class="modal-overlay" id="loginModal" style="display:none;">
+    <div class="modal-box" style="width: 340px;">
+      <div style="text-align:center; margin-bottom:20px; font-size:40px;">🔐</div>
+      <h2 style="text-align:center; margin-bottom: 24px;">Sign In</h2>
+
+      <input type="text" id="loginName" class="glass-input" placeholder="Enter your full name" style="width:100%; margin-bottom:16px;">
+      <input type="email" id="loginEmail" class="glass-input" placeholder="Enter your email address" style="width:100%; margin-bottom:24px;">
+
+      <button class="btn btn-primary"
+        style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px;"
+        onclick="legacyLogin()">
+        Start Coaching
+      </button>
+    </div>
+  </div>
+
+  <!-- ONBOARDING MODAL -->
+  <div class="modal-overlay" id="onboardingModal" style="display:none;">
+    <div class="modal-box">
+      <h2>Welcome to Agentic Career Coach</h2>
+      <p>Let's map out your placement goals before we analyze your skills.</p>
+
+      <div class="modal-group">
+        <label>1. Days until Placement Season:</label>
+        <input type="number" id="goalDays" placeholder="e.g. 30" min="1" max="365" required>
+      </div>
+
+      <div class="modal-group">
+        <label>2. Rate your DSA Confidence (1-10):</label>
+        <input type="number" id="goalDsa" placeholder="1-10" min="1" max="10" required>
+      </div>
+
+      <div class="modal-group">
+        <label>3. Rate your Project Experience (1-10):</label>
+        <input type="number" id="goalProjects" placeholder="1-10" min="1" max="10" required>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%; margin-top:12px;" onclick="saveOnboarding()">Save Goals &
+        Start</button>
+    </div>
+  </div><!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      Agentic AI Career Coach
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span id="agentHeartbeat"
+        style="font-size:11px; color:var(--agent-color); opacity:0.4; transition:opacity 0.3s; font-family:'IBM Plex Mono',monospace;">🤖
+        Agent idle</span>
+      <span id="countdownBadge"
+        style="font-size:11px; color:var(--accent2); font-family:'IBM Plex Mono',monospace; display:none;">📅 -- days
+        left</span>
+
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div id="userDisplay" style="font-size:12px; font-weight:600; color:var(--text);">User</div>
+        <button onclick="logout()"
+          style="background:none; border:none; color:var(--text3); cursor:pointer; font-size:11px; text-decoration:underline;">Logout</button>
+      </div>
+
+      <span><span class="status-dot"></span><span style="font-size:12px; color:var(--text3)">Agent Active</span></span>
+      <div class="session-badge" id="sessionBadge">SESSION: ---</div>
+    </div>
+  </header>
+
+  <!-- AGENT ACTION BANNER -->
+  <div id="agentBanner">
+    <div class="banner-content">
+      <div class="banner-icon">⚡</div>
+      <div>
+        <div class="banner-title">Agent Action Triggered <span class="agent-badge">LIVE</span></div>
+        <div class="banner-sub" id="bannerMessage">Task missed → Plan adjusted</div>
+      </div>
+    </div>
+    <button class="banner-close" onclick="closeBanner()">✕</button>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main">
+
+    <!-- LEFT PANEL: Resume + Skills -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>📄 Resume & Skills</span>
+      </div>
+      <div class="panel-body">
+        <select class="role-select" id="roleSelect">
+          <option value="">Select Target Company Tier & Role...</option>
+          <option value="FAANG SDE">FAANG-Tier (SDE)</option>
+          <option value="Mid-Tier Product SDE">Mid-Tier Product (SDE)</option>
+          <option value="Service Company SDE">Service Company (SDE)</option>
+          <option value="FAANG Data Scientist">FAANG-Tier (Data Scientist)</option>
+          <option value="Mid-Tier Data Analyst">Mid-Tier (Data Analyst)</option>
+        </select>
+
+        <!-- PDF UPLOAD ZONE -->
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="pdfInput" accept=".pdf" onchange="handlePdfUpload(event)">
+          <div class="upload-icon">📄</div>
+          <div class="upload-title">Upload Resume PDF</div>
+          <div class="upload-sub">Drag & drop or click to browse</div>
+          <div class="upload-filename" id="uploadFilename"></div>
+        </div>
+
+        <div class="or-divider">or paste text below</div>
+
+        <textarea id="resumeInput" placeholder="Paste your resume text here..."></textarea>
+
+        <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeResume()">🔍 Analyze Resume</button>
+        <button class="btn btn-secondary" id="planBtn" onclick="generatePlan()" style="display:none">📅 Generate 3-Day
+          Plan</button>
+        <button class="btn btn-agent" onclick="triggerAgent()" style="margin-top:8px">⚡ Trigger Agent Check</button>
+
+        <div id="skillsDisplay" style="display:none">
+          <hr class="divider">
+          <div class="skills-section">
+            <div class="skills-title">💪 Strong</div>
+            <div class="skill-chips" id="strongChips"></div>
+            <div class="skills-title">⚡ Moderate</div>
+            <div class="skill-chips" id="moderateChips"></div>
+            <div class="skills-title">⚠️ Weak / Missing</div>
+            <div class="skill-chips" id="weakChips"></div>
+          </div>
+
+          <div class="score-ring" id="scoreRing">
+            <div>
+              <div class="score-number" id="readinessScore">--</div>
+              <div class="score-label">Readiness Score</div>
+            </div>
+            <div style="flex:1">
+              <div class="progress-bar-wrap">
+                <div class="progress-bar" id="readinessBar" style="width:0%"></div>
+              </div>
+              <div style="font-size:12px; color:var(--text3); margin-top:6px" id="gapSummary"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDDLE PANEL: Chat + Interview -->
+    <div class="panel" style="border-right: 1px solid var(--border);">
+      <div class="tabs" id="mainTabs">
+        <div class="tab active" onclick="switchTab('chat')">💬 Chat</div>
+        <div class="tab" onclick="switchTab('interview')">🎤 Mock Interview</div>
+        <div class="tab" id="tabbtn-gaps" onclick="switchTab('gaps')">🎯 Gap Analysis</div>
+        <div class="tab" id="tabbtn-leaderboard" onclick="switchTab('leaderboard')">🏆 Leaderboard</div>
+        <div class="tab" id="tabbtn-admin" style="display:none;" onclick="switchTab('admin')">📊 Admin Panel</div>
+      </div>
+
+      <!-- CHAT TAB -->
+      <div class="tab-content active" id="tab-chat">
+        <div class="chat-messages" id="chatMessages">
+          <div class="message message-system">
+            <div class="message-label">🧠 Career Coach Agent</div>
+            Welcome! I'm your Agentic AI Career Coach. Here's how to get started:
+            <br><br>
+            1️⃣ Select your <strong>target role</strong><br>
+            2️⃣ Paste your <strong>resume</strong> in the left panel<br>
+            3️⃣ Click <strong>Analyze Resume</strong> to extract skills<br>
+            4️⃣ Generate your <strong>3-Day Plan</strong><br>
+            5️⃣ Try the <strong>Mock Interview</strong>!
+            <br><br>
+            I'll proactively monitor your progress and trigger actions if you fall behind. 🚨
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+            <button class="send-btn" onclick="sendChat()">↑</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERVIEW TAB -->
+      <div class="tab-content" id="tab-interview" style="overflow-y:auto; padding:16px; flex-direction:column;">
+        <div id="interviewStart">
+          <div style="text-align:center; padding:40px 20px;">
+            <div style="font-size:48px; margin-bottom:16px;">🎤</div>
+            <div style="font-size:18px; font-weight:700; margin-bottom:8px;">Mock Interview</div>
+            <div style="font-size:13px; color:var(--text3); margin-bottom:24px;">3 questions tailored to your weak areas
+              and target role</div>
+            <button class="btn btn-primary" style="max-width:200px; margin:0 auto;" onclick="startInterview()">Start
+              Interview</button>
+          </div>
+        </div>
+        <div id="interviewActive" style="display:none;">
+          <div id="questionDisplay"></div>
+          <div id="mcqOptions" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+          <button class="btn btn-primary" onclick="submitAnswer()">Submit Answer →</button>
+          <div id="evalDisplay"></div>
+        </div>
+        <div id="interviewDone" style="display:none;"></div>
+      </div>
+
+      <!-- GAP ANALYSIS TAB -->
+      <div class="tab-content" id="tab-gaps" style="overflow-y:auto; padding:16px; flex-direction:column;">
+        <div id="gapContent">
+          <div class="empty-state">Complete resume analysis to see gap report</div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD TAB -->
+      <div class="tab-content" id="tab-leaderboard" style="overflow-y:auto; padding:16px; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="color:var(--accent2);">🏆 Placement Leaderboard</h3>
+          <button class="btn" style="padding:6px 12px; font-size:12px;" onclick="loadLeaderboard()">↻ Refresh</button>
+        </div>
+        <div id="leaderboardContent">
+          <div class="empty-state">Loading leaderboard...</div>
+        </div>
+      </div>
+
+      <!-- ADMIN PANEL TAB -->
+      <div class="tab-content" id="tab-admin" style="overflow-y:auto; padding:16px; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="color:var(--red);">📊 TPC Admin Dashboard</h3>
+          <button class="btn" style="padding:6px 12px; font-size:12px;" onclick="loadAdminDashboard()">↻
+            Refresh</button>
+        </div>
+        <div id="adminContent">
+          <div class="empty-state">Loading analytics...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Tasks + Agent Logs -->
+    <div class="panel" style="border-right:none;">
+      <div class="tabs">
+        <div class="tab active" onclick="switchRightTab('tasks')">📋 Tasks</div>
+        <div class="tab" onclick="switchRightTab('logs')">🤖 Agent Log</div>
+      </div>
+
+      <div class="tab-content active" id="rtab-tasks" style="flex-direction:column; overflow:hidden;">
+        <div style="padding:10px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; color:var(--text3)">Progress</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent2)"
+              id="progressLabel">0/0</span>
+          </div>
+          <div class="progress-bar-wrap" style="margin-top:6px;">
+            <div class="progress-bar" id="taskProgressBar" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="panel-body" id="taskList">
+          <div class="empty-state">Generate a plan to see your tasks here</div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="rtab-logs" style="flex-direction:column; overflow:hidden;">
+        <div class="panel-body" id="agentLogList">
+          <div class="empty-state">Agent actions will appear here</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ─── API CONFIGURATION ──────────────────────────────────────────────
+    // When your backend is deployed to cloud (e.g. Google Cloud Run),
+    // paste the cloud backend URL below:
+    const CLOUD_BACKEND_URL = "https://parachute-playmate-acting.ngrok-free.dev";
+
+    const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+      ? "http://localhost:3001"
+      : CLOUD_BACKEND_URL;
+
+    // ─── PDF.js SETUP ────────────────────────────────────────────────
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    async function handlePdfUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (file.type !== 'application/pdf') {
+        alert('Please upload a PDF file.');
+        return;
+      }
+
+      const zone = document.getElementById('uploadZone');
+      const filenameEl = document.getElementById('uploadFilename');
+      zone.classList.add('loading');
+      zone.querySelector('.upload-title').textContent = 'Parsing PDF...';
+      zone.querySelector('.upload-icon').textContent = '⏳';
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items.map(item => item.str).join(' ');
+          fullText += pageText + '\n';
+        }
+
+        // Fill the textarea with extracted text
+        document.getElementById('resumeInput').value = fullText.trim();
+
+        // Success state
+        zone.classList.remove('loading');
+        zone.classList.add('success');
+        zone.querySelector('.upload-icon').textContent = '✅';
+        zone.querySelector('.upload-title').textContent = 'PDF Loaded!';
+        filenameEl.textContent = file.name;
+
+        addMessage('system', `📄 Resume PDF loaded: ${file.name} (${pdf.numPages} page${pdf.numPages > 1 ? 's' : ''})\nText extracted and ready for analysis.`, '📄 PDF Parsed');
+      } catch (err) {
+        console.error('PDF parse error:', err);
+        zone.classList.remove('loading');
+        zone.querySelector('.upload-icon').textContent = '❌';
+        zone.querySelector('.upload-title').textContent = 'Failed to parse PDF';
+        zone.querySelector('.upload-sub').textContent = 'Try pasting text manually instead.';
+        addMessage('system', `⚠️ Could not parse PDF: ${err.message}. Please paste your resume text manually.`, '⚠️ Error');
+      }
+    }
+
+    // Drag and drop visual feedback
+    document.addEventListener('DOMContentLoaded', () => {
+      const zone = document.getElementById('uploadZone');
+      if (!zone) return;
+      ['dragenter', 'dragover'].forEach(evt => {
+        zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.remove('dragover'); });
+      });
+      zone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          document.getElementById('pdfInput').files = files;
+          handlePdfUpload({ target: { files } });
+        }
+      });
+    });
+    let sessionId = null;
+    let sessionData = {};
+
+    // ─── SUPABASE AUTH CONFIG ──────────────────────────────────────────
+    const SUPABASE_URL = "https://ugcfourespiwzqwxjlyq.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_mbKyhopSFvsU1LMiUpvV_Q_fWIlTQka";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ─── AUTHENTICATION ────────────────────────────────────────────────
+    let userProfile = null;
+
+    async function authLogin(provider) {
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: window.location.origin + window.location.pathname
+        }
+      });
+      if (error) alert("Auth Error: " + error.message);
+    }
+
+    async function legacyLogin() {
+      const name = document.getElementById('loginName').value.trim();
+      const email = document.getElementById('loginEmail').value.trim();
+      if (!name || !email) return alert('Please enter both name and email.');
+      
+      userProfile = {
+        id: email, // Use email as unique identifier
+        email: email,
+        user_metadata: { full_name: name }
+      };
+
+      document.getElementById('loginModal').style.display = 'none';
+
+      // Update header name
+      const fullName = userProfile.user_metadata.full_name || userProfile.email.split('@')[0];
+      document.getElementById('userDisplay').textContent = fullName;
+
+      // Check if Admin
+      if (userProfile.email === 'admin@gmail.com') {
+        document.getElementById('tabbtn-admin').style.display = 'block';
+        document.querySelectorAll('.tab:not(#tabbtn-admin)').forEach(t => t.style.display = 'none');
+        switchTab('admin');
+        loadAdminDashboard();
+      } else {
+        init();
+      }
+    }
+
+    // On page load, just show the login modal normally
+    function checkAuth() {
+      document.getElementById('loginModal').style.display = 'flex';
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────────
+    async function init() {
+      try {
+        const res = await fetch(`${API}/session/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: userProfile.id,
+            email: userProfile.email,
+            name: userProfile.user_metadata.full_name || userProfile.email.split('@')[0]
+          })
+        });
+        const data = await res.json();
+        sessionId = data.sessionId;
+        document.getElementById('sessionBadge').textContent = `SESSION: ${sessionId.slice(0, 8).toUpperCase()}`;
+        addMessage('system', '✅ Session established. Agent is watching your progress.', '🤖 Agent');
+
+        // Show onboarding modal on new session
+        document.getElementById('onboardingModal').style.display = 'flex';
+      } catch (e) {
+        addMessage('system', '⚠️ Backend not connected. Make sure the server is running on port 3001.', '⚠️ Warning');
+      }
+    }
+
+    // ─── ONBOARDING ──────────────────────────────────────────────────
+    let userGoals = {};
+    function saveOnboarding() {
+      const days = document.getElementById('goalDays').value;
+      const dsa = document.getElementById('goalDsa').value;
+      const proj = document.getElementById('goalProjects').value;
+
+      if (!days || !dsa || !proj) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      userGoals = { days, dsa, proj };
+
+      // Hide modal
+      document.getElementById('onboardingModal').style.display = 'none';
+
+      // Update countdown
+      const countdownBadge = document.getElementById('countdownBadge');
+      countdownBadge.textContent = `📅 ${days} days to placement`;
+      countdownBadge.style.display = 'inline-block';
+
+      addMessage('system', `🎯 Goals saved! You have ${days} days until placement season. DSA Confidence: ${dsa}/10, Projects: ${proj}/10. Now, upload your resume to begin!`, '🎯 Onboarding');
+    }
+
+    // ─── TABS ────────────────────────────────────────────────────────
+    function switchTab(name) {
+      document.querySelectorAll('#mainTabs .tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      // Find correct tab button to highlight
+      const tabs = Array.from(document.querySelectorAll('#mainTabs .tab'));
+      const activeTab = tabs.find(t => t.getAttribute('onclick') === `switchTab('${name}')`);
+      if (activeTab) activeTab.classList.add('active');
+
+      document.getElementById(`tab-${name}`).classList.add('active');
+
+      if (name === 'leaderboard') loadLeaderboard();
+      if (name === 'admin') loadAdminDashboard();
+    }
+
+    // ─── DATA FETCHING ───────────────────────────────────────────────
+    async function loadLeaderboard() {
+      const content = document.getElementById('leaderboardContent');
+      content.innerHTML = '<div class="empty-state">Loading latest scores...</div>';
+      try {
+        const res = await fetch(`${API}/leaderboard`);
+        const data = await res.json();
+        if (!data.leaderboard || data.leaderboard.length === 0) {
+          content.innerHTML = '<div class="empty-state">No students found. Run an analysis first.</div>';
+          return;
+        }
+
+        let html = '';
+        data.leaderboard.forEach((user, idx) => {
+          let isMe = user.id === sessionId ? 'background: rgba(124, 58, 237, 0.2); border: 1px solid var(--accent);' : 'background: var(--surface2);';
+          let icon = idx === 0 ? '🏆' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : '👤'));
+
+          html += `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-radius:8px; margin-bottom:8px; ${isMe}">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="font-size:24px; width:30px; text-align:center;">${icon}</div>
+            <div>
+              <div style="font-weight:600; color:var(--text);">${user.name} ${user.id === sessionId ? '(You)' : ''}</div>
+              <div style="font-size:12px; color:var(--text3);">${user.role}</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:18px; font-weight:700; color:var(--text);">${Math.round(user.score)} pts</div>
+            <div style="font-size:12px; color:${user.trend.startsWith('+') ? 'var(--green)' : 'var(--red)'};">${user.trend} this week</div>
+          </div>
+        </div>
+      `;
+        });
+        content.innerHTML = html;
+      } catch (e) {
+        content.innerHTML = '<div class="empty-state">Failed to load leaderboard.</div>';
+      }
+    }
+
+    async function loadAdminDashboard() {
+      const content = document.getElementById('adminContent');
+      try {
+        const res = await fetch(`${API}/admin/analytics`);
+        const data = await res.json();
+
+        let weakHtml = data.weakest_skills.map(s => `
+      <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border);">
+        <span style="color:var(--text);">${s.skill}</span>
+        <span style="color:var(--red); font-weight:600;">${s.count} students missing</span>
+      </div>
+    `).join('');
+
+        let riskHtml = data.at_risk.map(s => `
+      <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border);">
+        <span style="color:var(--text);">${s.name} (${s.role})</span>
+        <span style="color:var(--orange); font-size:12px;">${s.missed_tasks > 0 ? s.missed_tasks + ' overdue tasks' : '0 tasks completed'}</span>
+      </div>
+    `).join('');
+
+        content.innerHTML = `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+        <div style="background:var(--surface2); padding:16px; border-radius:8px; border:1px solid var(--border); text-align:center;">
+          <div style="font-size:24px; font-weight:700; color:var(--accent2);">${data.total_students}</div>
+          <div style="font-size:12px; color:var(--text2);">Total Active Students</div>
+        </div>
+        <div style="background:var(--surface2); padding:16px; border-radius:8px; border:1px solid var(--border); text-align:center;">
+          <div style="font-size:24px; font-weight:700; color:var(--green);">${data.most_improved ? data.most_improved.name : '--'}</div>
+          <div style="font-size:12px; color:var(--text2);">Most Improved MVP</div>
+        </div>
+      </div>
+      
+      <div style="margin-bottom:20px;">
+        <h4 style="color:var(--text2); margin-bottom:10px;">📉 Top Skill Gaps (Need Masterclass)</h4>
+        <div style="background:var(--surface2); padding:8px 16px; border-radius:8px;">${weakHtml || '<div class="empty-state" style="padding:10px;">No gap data yet.</div>'}</div>
+      </div>
+      
+      <div>
+        <h4 style="color:var(--text2); margin-bottom:10px;">🚨 At-Risk Students</h4>
+        <div style="background:var(--surface2); padding:8px 16px; border-radius:8px; border-left:4px solid var(--red);">${riskHtml || '<div class="empty-state" style="padding:10px;">All students on track.</div>'}</div>
+      </div>
+    `;
+      } catch (e) {
+        content.innerHTML = '<div class="empty-state">Failed to load admin analytics.</div>';
+      }
+    }
+    function switchRightTab(name) {
+      document.querySelectorAll('#rtab-tasks,#rtab-logs').forEach(t => t.classList.remove('active'));
+      document.getElementById(`rtab-${name}`).classList.add('active');
+    }
+
+    // ─── AGENT BANNER ────────────────────────────────────────────────
+    function showAgentBanner(message) {
+      document.getElementById('bannerMessage').textContent = message;
+      const banner = document.getElementById('agentBanner');
+      banner.classList.add('visible');
+      setTimeout(() => banner.classList.remove('visible'), 8000);
+    }
+    function closeBanner() {
+      document.getElementById('agentBanner').classList.remove('visible');
+    }
+
+    // ─── CHAT ────────────────────────────────────────────────────────
+    function addMessage(type, text, label = null) {
+      const msgs = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = `message message-${type}`;
+      if (label) div.innerHTML = `<div class="message-label">${label}</div>${text.replace(/\n/g, '<br>')}`;
+      else div.innerHTML = text.replace(/\n/g, '<br>');
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    function addLoadingMessage() {
+      const msgs = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'message message-system';
+      div.id = 'loadingMsg';
+      div.innerHTML = '<span class="loading"><span class="spinner"></span> Agent thinking...</span>';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+    function removeLoadingMessage() {
+      const el = document.getElementById('loadingMsg');
+      if (el) el.remove();
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      addMessage('user', text);
+      const loading = addLoadingMessage();
+
+      try {
+        const response = await fetch(`${API}/agent-trigger`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, message: text })
+        });
+        const data = await response.json();
+        removeLoadingMessage();
+        if (data.proactiveCheck?.triggered) {
+          addMessage('agent', `⚡ ${data.proactiveCheck.message}\n\nRecommendation: ${data.proactiveCheck.recommendation || 'Keep going!'}`, '🤖 Agent Action');
+          showAgentBanner(data.proactiveCheck.message);
+        } else {
+          addMessage('system', `I heard you! Currently monitoring your session.\n\nProgress: ${data.agentLoop?.sessionState?.planProgress || '0/0'} tasks\nAgent logs: ${data.agentLoop?.sessionState?.agentLogsCount || 0} recorded`, '🧠 Agent');
+        }
+        refreshLogs();
+      } catch (e) {
+        removeLoadingMessage();
+        addMessage('system', 'Make sure the backend server is running on port 3001.', '⚠️');
+      }
+    }
+
+    // ─── RESUME ANALYSIS ────────────────────────────────────────────
+    async function analyzeResume() {
+      const role = document.getElementById('roleSelect').value;
+      const resume = document.getElementById('resumeInput').value.trim();
+      if (!role) return alert('Please select a target role first');
+      if (!resume) return alert('Please paste your resume text');
+      if (!sessionId) return alert('Session not initialized');
+
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Analyzing...';
+      const loading = addLoadingMessage();
+      addMessage('user', `Analyzing my resume for ${role} role...`);
+
+      try {
+        const res = await fetch(`${API}/analyze-resume`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, resumeText: resume, role })
+        });
+        const data = await res.json();
+        removeLoadingMessage();
+
+        sessionData.skills = data.skills;
+        sessionData.gapAnalysis = data.gapAnalysis;
+        sessionData.role = role;
+
+        // Show skills
+        renderSkills(data.skills);
+        document.getElementById('readinessScore').textContent = `${data.gapAnalysis.readiness_score}%`;
+        document.getElementById('readinessBar').style.width = `${data.gapAnalysis.readiness_score}%`;
+        document.getElementById('gapSummary').textContent = data.gapAnalysis.summary;
+        document.getElementById('skillsDisplay').style.display = 'block';
+        document.getElementById('planBtn').style.display = 'block';
+
+        // Gap analysis tab
+        renderGapAnalysis(data.gapAnalysis, data.roleRequirements);
+
+        const msg = `✅ Resume analyzed for **${role}**!\n\n` +
+          `📊 Readiness: ${data.gapAnalysis.readiness_score}%\n` +
+          `💪 Strong: ${data.skills.strong.join(', ') || 'None detected'}\n` +
+          `⚠️ Weak: ${data.skills.weak.join(', ') || 'None detected'}\n` +
+          `🎯 Gaps: ${data.gapAnalysis.missing_core.join(', ') || 'None'}\n\n` +
+          `Click "Generate 3-Day Plan" to get your study schedule!`;
+
+        addMessage('system', msg, '🧠 Analysis Complete');
+
+        if (data.agentLog) {
+          showAgentBanner(`Resume analyzed → ${data.skills.weak.length} weak skills detected`);
+          refreshLogs();
+        }
+      } catch (e) {
+        removeLoadingMessage();
+        addMessage('system', `Error: ${e.message}. Make sure backend is running.`, '⚠️');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔍 Analyze Resume';
+      }
+    }
+
+    function renderSkills(skills) {
+      ['strong', 'moderate', 'weak'].forEach(level => {
+        const el = document.getElementById(`${level}Chips`);
+        el.innerHTML = '';
+        (skills[level] || []).forEach(s => {
+          const span = document.createElement('span');
+          span.className = `chip chip-${level}`;
+          span.textContent = s;
+          el.appendChild(span);
+        });
+      });
+    }
+
+    function renderGapAnalysis(gap, req) {
+      const el = document.getElementById('gapContent');
+      el.innerHTML = `
+    <div class="gap-section">
+      <div class="gap-title">❌ Missing Core Skills</div>
+      <div class="skill-chips">${(gap.missing_core || []).map(s => `<span class="chip chip-weak">${s}</span>`).join('') || '<span style="color:var(--green);font-size:13px">✓ All covered</span>'}</div>
+    </div>
+    <div class="gap-section">
+      <div class="gap-title">⚠️ Missing Secondary Skills</div>
+      <div class="skill-chips">${(gap.missing_secondary || []).map(s => `<span class="chip chip-moderate">${s}</span>`).join('') || '<span style="color:var(--green);font-size:13px">✓ All covered</span>'}</div>
+    </div>
+    <div class="gap-section">
+      <div class="gap-title">🔧 Missing Tools</div>
+      <div class="skill-chips">${(gap.missing_tools || []).map(s => `<span class="chip chip-moderate">${s}</span>`).join('') || '<span style="color:var(--green);font-size:13px">✓ All covered</span>'}</div>
+    </div>
+    <div class="gap-section">
+      <div class="gap-title">📋 Required by Role</div>
+      <div style="font-size:12px; color:var(--text2); line-height:1.8;">
+        Core: ${(req?.core_skills || []).join(', ')}<br>
+        Secondary: ${(req?.secondary_skills || []).join(', ')}<br>
+        Tools: ${(req?.tools || []).join(', ')}
+      </div>
+    </div>
+    <div class="gap-section">
+      <div class="gap-title">💡 Summary</div>
+      <div style="font-size:13px; color:var(--text2); line-height:1.6;">${gap.summary}</div>
+    </div>
+  `;
+    }
+
+    // ─── GENERATE PLAN ───────────────────────────────────────────────
+    async function generatePlan() {
+      const btn = document.getElementById('planBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      addMessage('user', 'Generate my 3-day preparation plan');
+      const loading = addLoadingMessage();
+
+      try {
+        const res = await fetch(`${API}/generate-plan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, userGoals })
+        });
+        const data = await res.json();
+        removeLoadingMessage();
+
+        sessionData.plan = data.plan;
+        renderTasks(data.plan);
+
+        addMessage('system', `📅 **3-Day Plan Generated!**\n\n${data.plan.map(t => `Day ${t.day}: ${t.task} (${t.duration})`).join('\n')}\n\nGo to the Tasks panel to track progress!`, '📅 Plan Ready');
+
+        if (data.agentLog) {
+          showAgentBanner('Plan generated → Agent will monitor your progress');
+          refreshLogs();
+        }
+
+        // Auto-trigger agent check after 10 seconds (demo of proactive behavior)
+        setTimeout(() => {
+          showAgentBanner('⚡ Scheduled check-in: Agent monitoring your task completion');
+          addMessage('agent', '⚡ I\'ve generated your plan and I\'m now monitoring your progress. Complete tasks daily and I\'ll track your readiness!', '🤖 Agent Proactive Check');
+          refreshLogs();
+        }, 10000);
+
+      } catch (e) {
+        removeLoadingMessage();
+        addMessage('system', `Error: ${e.message}`, '⚠️');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '📅 Generate 3-Day Plan';
+      }
+    }
+
+    function renderTasks(plan) {
+      const el = document.getElementById('taskList');
+      const completed = plan.filter(t => t.status === 'completed').length;
+      document.getElementById('progressLabel').textContent = `${completed}/${plan.length}`;
+      document.getElementById('taskProgressBar').style.width = `${plan.length ? (completed / plan.length * 100) : 0}%`;
+
+      el.innerHTML = plan.map(task => {
+        const statusClass = task.agentNudged ? 'status-nudged' : `status-${task.status}`;
+        const statusText = task.agentNudged ? '🤖 Nudged' : task.status;
+        return `
+    <div class="task-item" id="taskitem-${task.id}">
+      <div class="task-day-badge">DAY ${task.day} · ${task.priority?.toUpperCase()}</div>
+      <div class="task-name">${task.task}</div>
+      <div class="task-meta">
+        <span>⏱ ${task.duration}</span>
+        <span>📚 ${task.topic}</span>
+      </div>
+      ${task.resources ? `<div style="font-size:11px; color:var(--text3); margin-top:4px;">💡 ${task.resources}</div>` : ''}
+      ${task.status === 'pending' ? `
+      <div class="task-actions">
+        <button class="task-btn task-btn-done" onclick="updateTask('${task.id}','completed')">✓ Done</button>
+        <button class="task-btn task-btn-miss" onclick="updateTask('${task.id}','missed')">✗ Missed</button>
+      </div>` : `<div class="task-status ${statusClass}">${statusText}</div>`}
+    </div>`;
+      }).join('');
+    }
+
+    async function updateTask(taskId, status) {
+      try {
+        const res = await fetch(`${API}/update-progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, taskId, status })
+        });
+        const data = await res.json();
+        sessionData.plan = data.plan;
+        renderTasks(data.plan);
+
+        if (status === 'missed' && data.agentLog) {
+          showAgentBanner('Task missed → Agent adjusting plan priority');
+          addMessage('agent', `⚡ I noticed you missed a task. I'm adjusting priorities to help you catch up. Focus on core skills first!`, '🤖 Agent Action');
+        } else if (status === 'completed') {
+          addMessage('system', '✅ Great work! Task marked complete. Keep the momentum!', '🎉');
+        }
+        refreshLogs();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // ─── AGENT TRIGGER ───────────────────────────────────────────────
+    async function triggerAgent() {
+      addMessage('agent', '⚡ Manual agent check triggered...', '🤖 Agent');
+      const loading = addLoadingMessage();
+      try {
+        const res = await fetch(`${API}/agent-trigger`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        });
+        const data = await res.json();
+        removeLoadingMessage();
+
+        const results = data.agentLoop?.results || [];
+        const proactive = data.proactiveCheck;
+
+        if (results.length > 0 || proactive?.triggered) {
+          const msgs = results.map(r => r.message).join('\n');
+          const proMsg = proactive?.triggered ? `\n${proactive.message}` : '';
+          addMessage('agent', `⚡ **Agent Actions Taken:**\n${msgs}${proMsg}`, '🤖 Agent Action');
+          showAgentBanner(results[0]?.message || proactive?.message || 'Agent check complete');
+        } else {
+          addMessage('agent', '✅ All systems nominal. Progress is on track. Keep going!', '🤖 Agent Check');
+        }
+        refreshLogs();
+      } catch (e) {
+        removeLoadingMessage();
+        addMessage('system', 'Agent trigger failed. Check backend connection.', '⚠️');
+      }
+    }
+
+    // ─── INTERVIEW ───────────────────────────────────────────────────
+    let currentQuestion = null;
+    let questionNumber = 0;
+    let totalQuestions = 0;
+
+    async function startInterview() {
+      if (!sessionId || !sessionData.role) {
+        switchTab('chat');
+        addMessage('system', 'Please analyze your resume first before starting the interview!', '⚠️');
+        return switchTab('interview');
+      }
+      document.getElementById('interviewStart').style.display = 'none';
+      document.getElementById('interviewActive').style.display = 'block';
+      document.getElementById('questionDisplay').innerHTML = '<span class="loading"><span class="spinner"></span> Loading questions...</span>';
+
+      try {
+        const res = await fetch(`${API}/mock-interview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        });
+        const data = await res.json();
+        currentQuestion = data.question;
+        questionNumber = 1;
+        totalQuestions = data.totalQuestions;
+        renderQuestion(data.question, 1, totalQuestions);
+
+        if (data.agentLog) {
+          showAgentBanner('Mock interview started → Monitoring performance');
+          refreshLogs();
+        }
+      } catch (e) {
+        document.getElementById('questionDisplay').innerHTML = `<div style="color:var(--red)">Error: ${e.message}</div>`;
+      }
+    }
+
+    function renderQuestion(q, num, total) {
+      if (!q) {
+        document.getElementById('questionDisplay').innerHTML = '<div style="color:var(--red)">Error loading question. Try again.</div>';
+        return;
+      }
+      document.getElementById('questionDisplay').innerHTML = `
+    <div class="interview-question">
+      <div class="question-num">Question ${num} of ${total} · ${q.topic || 'General'}</div>
+      <div class="question-text">${q.question || 'Question not available.'}</div>
+    </div>
+  `;
+
+      const optionsDiv = document.getElementById('mcqOptions');
+      optionsDiv.innerHTML = '';
+      if (q.options) {
+        q.options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-secondary';
+          btn.style.textAlign = 'left';
+          btn.style.whiteSpace = 'normal';
+          btn.textContent = opt;
+          btn.onclick = () => {
+            // highlight selected
+            Array.from(optionsDiv.children).forEach(c => c.style.borderColor = 'var(--border)');
+            btn.style.borderColor = 'var(--accent)';
+            btn.dataset.selected = 'true';
+            selectedAnswer = opt; // Set global
+          };
+          optionsDiv.appendChild(btn);
+        });
+      }
+
+      selectedAnswer = null;
+      document.getElementById('evalDisplay').innerHTML = '';
+    }
+
+    let selectedAnswer = null;
+
+    async function submitAnswer() {
+      if (!selectedAnswer) return alert('Please select an option first.');
+      document.getElementById('evalDisplay').innerHTML = '<span class="loading"><span class="spinner"></span> Evaluating...</span>';
+
+      try {
+        const res = await fetch(`${API}/evaluate-answer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, answer: selectedAnswer })
+        });
+        const data = await res.json();
+
+        const isCorrect = data.evaluation.score === 1;
+        const scoreClass = isCorrect ? 'score-good' : 'score-bad';
+
+        document.getElementById('evalDisplay').innerHTML = `
+      <div class="eval-result">
+        <div class="score-display">
+          <div class="score-big ${scoreClass}">${isCorrect ? '10' : '0'}/10</div>
+          <div>
+            <div style="font-weight:600; font-size:14px">Question ${data.questionNumber} Score</div>
+            <div style="font-size:12px; color:var(--text3)">Evaluation complete</div>
+          </div>
+        </div>
+        <div style="font-size:13px; color:var(--text2); margin-bottom:10px;">${data.evaluation.feedback}</div>
+      </div>
+    `;
+
+        if (data.completed) {
+          setTimeout(() => showInterviewResults(data), 2000);
+        } else {
+          setTimeout(() => {
+            currentQuestion = data.nextQuestion;
+            questionNumber++;
+            renderQuestion(data.nextQuestion, questionNumber, totalQuestions);
+          }, 3000);
+        }
+      } catch (e) {
+        document.getElementById('evalDisplay').innerHTML = `<div style="color:var(--red)">Error: ${e.message}</div>`;
+      }
+    }
+
+
+
+    function showInterviewResults(data) {
+      document.getElementById('interviewActive').style.display = 'none';
+      document.getElementById('interviewDone').style.display = 'block';
+
+      // Calculate average accurately based on new scoring (1 or 0 per question)
+      const totalScoreVal = data.allScores.reduce((sum, s) => sum + (s.score === 1 ? 10 : 0), 0);
+      const avg = (totalScoreVal / totalQuestions).toFixed(1);
+
+      const grade = avg >= 8 ? '🏆 Excellent' : avg >= 6 ? '👍 Good' : avg >= 4 ? '📈 Needs Work' : '🔧 Practice More';
+
+      document.getElementById('interviewDone').innerHTML = `
+    <div style="text-align:center; padding:20px 0;">
+      <div style="font-size:48px; margin-bottom:12px;">${avg >= 7 ? '🎉' : '💪'}</div>
+      <div style="font-size:22px; font-weight:700; margin-bottom:4px;">${grade}</div>
+      <div style="font-size:40px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--accent2); margin:12px 0;">${avg}<span style="font-size:18px">/10</span></div>
+      <div style="font-size:13px; color:var(--text3); margin-bottom:24px;">Average score across ${totalQuestions} questions</div>
+    </div>
+    ${data.allScores.map((s, i) => `
+      <div class="eval-result" style="margin-bottom:10px;">
+        <div style="font-size:12px; color:var(--text3); margin-bottom:6px;">Q${i + 1}: </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="font-size:24px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:${s.score === 1 ? 'var(--green)' : 'var(--red)'};">${s.score === 1 ? '10' : '0'}/10</div>
+          <div style="font-size:12px; color:var(--text2);">${s.feedback}</div>
+        </div>
+      </div>
+    `).join('')}
+    <button class="btn btn-secondary" onclick="document.getElementById('interviewStart').style.display='block'; document.getElementById('interviewDone').style.display='none';" style="margin-top:10px">🔄 Retry Quiz</button>
+  `;
+    }
+
+    function resetInterview() {
+      document.getElementById('interviewStart').style.display = 'block';
+      document.getElementById('interviewActive').style.display = 'none';
+      document.getElementById('interviewDone').style.display = 'none';
+      document.getElementById('interviewDone').innerHTML = '';
+    }
+
+    // ─── AGENT LOGS ──────────────────────────────────────────────────
+    async function refreshLogs() {
+      if (!sessionId) return;
+      try {
+        const res = await fetch(`${API}/agent-logs/${sessionId}`);
+        const data = await res.json();
+        const el = document.getElementById('agentLogList');
+        if (!data.logs.length) {
+          el.innerHTML = '<div class="empty-state">No agent actions yet</div>';
+          return;
+        }
+        el.innerHTML = [...data.logs].reverse().map(log => `
+      <div class="agent-log-item">
+        <div class="agent-log-action">⚡ ${log.action}</div>
+        <div style="font-size:12px; color:var(--text2); margin-top:4px;">
+          ${JSON.stringify(log.details).slice(1, -1).replace(/"/g, '').replace(/,/g, ' · ').slice(0, 120)}
+        </div>
+        <div class="agent-log-time">${new Date(log.timestamp).toLocaleTimeString()}</div>
+      </div>
+    `).join('');
+      } catch (e) { }
+    }
+
+    // Auto-refresh logs every 30s
+    setInterval(refreshLogs, 30000);
+
+    // ─── AUTONOMOUS AGENT LOOP (CRITICAL FOR HACKATHON) ─────────────
+    // This runs every 30 seconds WITHOUT user input.
+    // Judges will see the agent banner fire autonomously.
+    let agentLoopCount = 0;
+
+    async function autonomousAgentLoop() {
+      if (!sessionId) return; // No session yet
+      if (!sessionData.role) return; // No resume analyzed yet
+
+      agentLoopCount++;
+      console.log(`[AGENT LOOP] Cycle #${agentLoopCount} — checking session ${sessionId}`);
+
+      try {
+        const res = await fetch(`${API}/agent-trigger`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        });
+        const data = await res.json();
+
+        const results = data.agentLoop?.results || [];
+        const proactive = data.proactiveCheck;
+
+        // Only show banner + message if the agent actually DID something
+        if (results.length > 0) {
+          for (const r of results) {
+            showAgentBanner(r.message);
+            addMessage('agent', `⚡ ${r.message}`, '🤖 Autonomous Agent');
+          }
+        }
+
+        if (proactive?.triggered) {
+          showAgentBanner(proactive.message);
+          addMessage('agent', `⚡ ${proactive.message}\n\n📌 Recommendation: ${proactive.recommendation || 'Complete your pending tasks!'}`, '🤖 Autonomous Agent');
+        }
+
+        // Update the heartbeat indicator
+        const heartbeat = document.getElementById('agentHeartbeat');
+        if (heartbeat) {
+          heartbeat.style.opacity = '1';
+          heartbeat.textContent = `🤖 Agent cycle #${agentLoopCount}`;
+          setTimeout(() => { heartbeat.style.opacity = '0.4'; }, 2000);
+        }
+
+        refreshLogs();
+      } catch (e) {
+        // Silent fail — agent loop should never break the UI
+        console.log('[AGENT LOOP] Backend unreachable, will retry next cycle');
+      }
+    }
+
+    // Fire the agent loop every 30 seconds (fast enough for demo)
+    setInterval(autonomousAgentLoop, 30000);
+
+    // Also fire it 10 seconds after plan generation (to catch immediate stalls in demo)
+    const originalGeneratePlan = generatePlan;
+
+    // Run auth check on load
+    checkAuth();
+  </script>
+</body>
+
+</html>

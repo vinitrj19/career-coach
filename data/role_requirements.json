@@ -1,0 +1,42 @@
+{
+  "FAANG SDE": {
+    "title": "Software Engineeer (FAANG-Tier)",
+    "company_tier": "FAANG",
+    "core_skills": ["DSA", "System Design", "Algorithms"],
+    "secondary_skills": ["OOP", "Scalability", "Concurrency"],
+    "tools": ["Git", "Linux", "Docker"],
+    "interview_focus": ["hard leetcode", "high-level system design", "performance bottlenecks"]
+  },
+  "Mid-Tier Product SDE": {
+    "title": "Software Engineer (Mid-Tier Product)",
+    "company_tier": "Mid-Tier",
+    "core_skills": ["OOP", "REST APIs", "SQL", "JavaScript"],
+    "secondary_skills": ["React", "Node.js", "Testing"],
+    "tools": ["Git", "Docker", "AWS"],
+    "interview_focus": ["api design", "database schema", "react components"]
+  },
+  "Service Company SDE": {
+    "title": "Software Engineer (Service Company)",
+    "company_tier": "Service",
+    "core_skills": ["Java", "SQL", "HTML", "CSS"],
+    "secondary_skills": ["OOP", "JavaScript", "Spring Boot"],
+    "tools": ["Git", "Eclipse", "Maven"],
+    "interview_focus": ["core java concepts", "sql queries", "basic oop"]
+  },
+  "FAANG Data Scientist": {
+    "title": "Data Scientist (FAANG-Tier)",
+    "company_tier": "FAANG",
+    "core_skills": ["Python", "Machine Learning", "Mathematics", "Statistics"],
+    "secondary_skills": ["Deep Learning", "SQL", "Spark"],
+    "tools": ["TensorFlow", "PyTorch", "Kubernetes", "Git"],
+    "interview_focus": ["ML algorithms from scratch", "statistics", "A/B testing"]
+  },
+  "Mid-Tier Data Analyst": {
+    "title": "Data Analyst (Mid-Tier)",
+    "company_tier": "Mid-Tier",
+    "core_skills": ["SQL", "Python", "Data Analysis", "Excel"],
+    "secondary_skills": ["Tableau", "Statistics", "Machine Learning"],
+    "tools": ["Jupyter", "Pandas", "Git", "Power BI"],
+    "interview_focus": ["sql queries", "data visualization", "pandas manipulation"]
+  }
+}
