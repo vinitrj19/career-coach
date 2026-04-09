@@ -1395,10 +1395,6 @@
     let sessionId = DEMO_USER.id;
     let sessionData = {};
     let userProfile = DEMO_USER;
-    // ─── PDF.js SETUP ────────────────────────────────────────────────
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
 
     async function handlePdfUpload(event) {
       const file = event.target.files[0];
@@ -1410,41 +1406,15 @@
 
       const zone = document.getElementById('uploadZone');
       const filenameEl = document.getElementById('uploadFilename');
-      zone.classList.add('loading');
-      zone.querySelector('.upload-title').textContent = 'Parsing PDF...';
-      zone.querySelector('.upload-icon').textContent = '⏳';
+      
+      // Success state (bypassing local pdf-parse, handled by backend)
+      zone.classList.remove('loading');
+      zone.classList.add('success');
+      zone.querySelector('.upload-icon').textContent = '✅';
+      zone.querySelector('.upload-title').textContent = 'PDF Loaded!';
+      filenameEl.textContent = file.name;
 
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = '';
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          const pageText = content.items.map(item => item.str).join(' ');
-          fullText += pageText + '\n';
-        }
-
-        // Fill the textarea with extracted text
-        document.getElementById('resumeInput').value = fullText.trim();
-
-        // Success state
-        zone.classList.remove('loading');
-        zone.classList.add('success');
-        zone.querySelector('.upload-icon').textContent = '✅';
-        zone.querySelector('.upload-title').textContent = 'PDF Loaded!';
-        filenameEl.textContent = file.name;
-
-        addMessage('system', `📄 Resume PDF loaded: ${file.name} (${pdf.numPages} page${pdf.numPages > 1 ? 's' : ''})\nText extracted and ready for analysis.`, '📄 PDF Parsed');
-      } catch (err) {
-        console.error('PDF parse error:', err);
-        zone.classList.remove('loading');
-        zone.querySelector('.upload-icon').textContent = '❌';
-        zone.querySelector('.upload-title').textContent = 'Failed to parse PDF';
-        zone.querySelector('.upload-sub').textContent = 'Try pasting text manually instead.';
-        addMessage('system', `⚠️ Could not parse PDF: ${err.message}. Please paste your resume text manually.`, '⚠️ Error');
-      }
+      addMessage('system', `📄 Resume PDF loaded: ${file.name}\nReady for backend analysis.`, '📄 PDF Queued');
     }
 
     // Drag and drop visual feedback
@@ -1757,8 +1727,11 @@
     async function analyzeResume() {
       const role = document.getElementById('roleSelect').value;
       const resume = document.getElementById('resumeInput').value.trim();
+      const fileInput = document.getElementById('pdfInput');
+      const file = fileInput ? fileInput.files[0] : null;
+
       if (!role) return alert('Please select a target role first');
-      if (!resume) return alert('Please paste your resume text');
+      if (!resume && !file) return alert('Please paste your resume text or upload a PDF');
       
       const user = window.session?.user || DEMO_USER;
 
@@ -1769,10 +1742,18 @@
       addMessage('user', `Analyzing my resume for ${role} role...`);
 
       try {
+        const formData = new FormData();
+        formData.append('sessionId', user.id);
+        formData.append('role', role);
+        if (file) {
+          formData.append('file', file);
+        } else {
+          formData.append('resumeText', resume);
+        }
+
         const res = await fetch(`${API}/analyze-resume`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: user.id, resumeText: resume, role })
+          body: formData
         });
         const data = await res.json();
         removeLoadingMessage();

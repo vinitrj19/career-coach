@@ -4,6 +4,10 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
+const pdf = require('pdf-parse');
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const { createSession, getSession, updateSession, logAgentAction, getAllSessions } = require('./agent/stateManager');
 const { runAgentLoop, triggerProactiveCheck } = require('./agent/agentLoop');
@@ -67,12 +71,31 @@ app.get('/session/:sessionId', (req, res) => {
 });
 
 // ─── RESUME ANALYSIS ────────────────────────────────────────────
-app.post('/analyze-resume', async (req, res) => {
-  const { resumeText, role } = req.body;
+app.post('/analyze-resume', upload.single('file'), async (req, res) => {
+  const role = req.body.role;
   const sessionId = req.body.sessionId || DEMO_USER.id;
-  if (!resumeText || !role) {
-    return res.status(400).json({ error: 'resumeText and role are required' });
+  
+  if (!role) {
+    return res.status(400).json({ error: 'role is required' });
   }
+  if (!req.file && !req.body.resumeText) {
+    return res.status(400).json({ error: 'No file uploaded or resumeText provided' });
+  }
+
+  let resumeText = req.body.resumeText || '';
+
+  if (req.file) {
+    console.log("PDF received:", req.file.originalname);
+    try {
+      const data = await pdf(req.file.buffer);
+      resumeText = data.text;
+      console.log("Extracted text length:", resumeText.length);
+    } catch (err) {
+      console.error("PDF parse error:", err);
+      return res.status(500).json({ error: "PDF parsing failed" });
+    }
+  }
+
   if (!roleRequirements[role]) {
     return res.status(400).json({ error: `Unknown role. Choose from: ${Object.keys(roleRequirements).join(', ')}` });
   }
