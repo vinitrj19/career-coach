@@ -72,45 +72,81 @@ app.get('/session/:sessionId', (req, res) => {
 
 // ─── RESUME ANALYSIS ────────────────────────────────────────────
 app.post('/analyze-resume', upload.single('file'), async (req, res) => {
-  const role = req.body.role;
-  const sessionId = req.body.sessionId || DEMO_USER.id;
-  
-  if (!role) {
-    return res.status(400).json({ error: 'role is required' });
-  }
-  if (!req.file && !req.body.resumeText) {
-    return res.status(400).json({ error: 'No file uploaded or resumeText provided' });
-  }
-
-  let resumeText = req.body.resumeText || '';
-
-  if (req.file) {
-    console.log("PDF received:", req.file.originalname);
-    try {
-      const data = await pdf(req.file.buffer);
-      resumeText = data.text;
-      console.log("Extracted text length:", resumeText.length);
-    } catch (err) {
-      console.error("PDF parse error:", err);
-      return res.status(500).json({ error: "PDF parsing failed" });
-    }
-  }
-
-  if (!roleRequirements[role]) {
-    return res.status(400).json({ error: `Unknown role. Choose from: ${Object.keys(roleRequirements).join(', ')}` });
-  }
-
-  // Ensure session exists before updating state
-  getOrCreateSession(sessionId);
-
   try {
-    console.log(`[AGENT] Analyzing resume for session ${sessionId}, role: ${role}`);
-    const skills = await parseResume(resumeText);
-    const gapAnalysis = await analyzeGaps(skills, roleRequirements, role);
+    const role = req.body.role;
+    const sessionId = req.body.sessionId || DEMO_USER.id;
 
+    // Validate role
+    if (!role) {
+      return res.status(400).json({ error: 'role is required' });
+    }
+    if (!roleRequirements[role]) {
+      return res.status(400).json({ error: `Unknown role. Choose from: ${Object.keys(roleRequirements).join(', ')}` });
+    }
+
+    // Validate file
+    if (!req.file && !req.body.resumeText) {
+      return res.status(400).json({ error: 'No file uploaded or resumeText provided' });
+    }
+
+    // Extract text from PDF buffer or use provided text
+    let resumeText = req.body.resumeText || '';
+
+    if (req.file) {
+      console.log("PDF received:", req.file.originalname);
+      try {
+        const pdfData = await pdf(req.file.buffer);
+        resumeText = pdfData.text;
+        console.log("Extracted text length:", resumeText.length);
+      } catch (pdfErr) {
+        console.error("PDF parse error:", pdfErr);
+        return res.status(400).json({ error: "PDF text extraction failed. Try a different PDF." });
+      }
+    }
+
+    if (!resumeText || resumeText.trim().length < 20) {
+      return res.status(400).json({ error: "PDF text too short to analyze. Please upload a text-based PDF." });
+    }
+
+    // Ensure session exists
+    getOrCreateSession(sessionId);
+
+    console.log(`[AGENT] Analyzing resume for session ${sessionId}, role: ${role}`);
+
+    // Fallback skill/gap structures — used if AI fails
+    let skills = { strong: [], moderate: [], weak: [] };
+    let gapAnalysis = {
+      missing_core: [],
+      missing_secondary: [],
+      missing_tools: [],
+      readiness_score: 0,
+      summary: 'Analysis unavailable — AI engine may be offline.'
+    };
+
+    // Call AI — fail gracefully with fallback
+    try {
+      skills = await parseResume(resumeText);
+      gapAnalysis = await analyzeGaps(skills, roleRequirements, role);
+    } catch (aiErr) {
+      console.error("[AI ERROR] Ollama/ngrok unreachable:", aiErr.message);
+      // Return fallback so frontend doesn't crash
+      skills = {
+        strong: ['Unable to detect — AI offline'],
+        moderate: [],
+        weak: ['Check Ollama + ngrok connection']
+      };
+      gapAnalysis = {
+        missing_core: roleRequirements[role]?.core_skills || [],
+        missing_secondary: [],
+        missing_tools: [],
+        readiness_score: 0,
+        summary: `⚠️ AI engine offline. Could not analyze resume. Ensure Ollama is running and ngrok tunnel is active.`
+      };
+    }
+
+    // Update session state
     updateSession(sessionId, { role, resumeText, skills, gapAnalysis });
 
-    // Agent action: log resume processed
     const agentLog = logAgentAction(sessionId, 'RESUME_ANALYZED', {
       strongSkills: (skills.strong || []).length,
       weakSkills: (skills.weak || []).length,
@@ -118,12 +154,30 @@ app.post('/analyze-resume', upload.single('file'), async (req, res) => {
       readinessScore: gapAnalysis.readiness_score || 0
     });
 
-    res.json({ skills, gapAnalysis, agentLog, roleRequirements: roleRequirements[role] });
+    // Always return valid JSON
+    return res.json({
+      skills,
+      gapAnalysis,
+      agentLog,
+      roleRequirements: roleRequirements[role],
+      raw_text_length: resumeText.length
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    // Global safety net — never crash, never return undefined
+    console.error("Analyze Resume Error:", err);
+    return res.status(500).json({
+      error: "Resume analysis failed",
+      details: err.message,
+      skills: { strong: [], moderate: [], weak: [] },
+      gapAnalysis: {
+        missing_core: [], missing_secondary: [], missing_tools: [],
+        readiness_score: 0, summary: 'Server error occurred.'
+      }
+    });
   }
 });
+
 
 // ─── GENERATE PLAN ──────────────────────────────────────────────
 app.post('/generate-plan', async (req, res) => {
