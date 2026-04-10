@@ -1210,18 +1210,17 @@
 
         <!-- PDF UPLOAD ZONE -->
         <div class="upload-zone" id="uploadZone">
-          <input type="file" id="pdfInput" accept=".pdf" onchange="handlePdfUpload(event)">
+          <input type="file" id="resumeInput" accept=".pdf" onchange="handlePdfUpload(event)">
           <div class="upload-icon">📄</div>
           <div class="upload-title">Upload Resume PDF</div>
           <div class="upload-sub">Drag & drop or click to browse</div>
           <div class="upload-filename" id="uploadFilename"></div>
         </div>
 
-        <div class="or-divider">or paste text below</div>
+        <div class="or-divider">or paste text below (Not Supported in PDF mode)</div>
+        <textarea id="textInput" placeholder="Paste your resume text here..."></textarea>
 
-        <textarea id="resumeInput" placeholder="Paste your resume text here..."></textarea>
-
-        <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeResume()">🔍 Analyze Resume</button>
+        <button class="btn btn-primary" id="analyzeBtn" onclick="handleAnalyze()">🔍 Analyze Resume</button>
         <button class="btn btn-secondary" id="planBtn" onclick="generatePlan()" style="display:none">📅 Generate 3-Day
           Plan</button>
         <button class="btn btn-agent" onclick="triggerAgent()" style="margin-top:8px">⚡ Trigger Agent Check</button>
@@ -1398,16 +1397,19 @@
 
     async function handlePdfUpload(event) {
       const file = event.target.files[0];
+      console.log("File selected:", file);
       if (!file) return;
       if (file.type !== 'application/pdf') {
         alert('Please upload a PDF file.');
         return;
       }
 
+      // Store globally so handleAnalyze can access it
+      window.selectedFile = file;
+
       const zone = document.getElementById('uploadZone');
       const filenameEl = document.getElementById('uploadFilename');
       
-      // Success state (bypassing local pdf-parse, handled by backend)
       zone.classList.remove('loading');
       zone.classList.add('success');
       zone.querySelector('.upload-icon').textContent = '✅';
@@ -1430,72 +1432,22 @@
       zone.addEventListener('drop', e => {
         const files = e.dataTransfer.files;
         if (files.length > 0) {
-          document.getElementById('pdfInput').files = files;
+          document.getElementById('resumeInput').files = files;
           handlePdfUpload({ target: { files } });
         }
       });
     });
-    // ─── SUPABASE AUTH CONFIG (BYPASSED) ───────────────────────────
-    const SUPABASE_URL = "https://ugcfourespiwzqwxjlyq.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_mbKyhopSFvsU1LMiUpvV_Q_fWIlTQka";
-    // const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ─── AUTHENTICATION ────────────────────────────────────────────────
-    let userProfile = null;
 
-    async function authLogin(provider) {
-      const { error } = await supabaseClient.auth.signInWithOAuth({
-        provider: provider,
-        options: {
-          redirectTo: window.location.origin + window.location.pathname
-        }
-      });
-      if (error) alert("Auth Error: " + error.message);
-    }
 
-    async function legacyLogin() {
-      const name = document.getElementById('loginName').value.trim();
-      const email = document.getElementById('loginEmail').value.trim();
-      if (!name || !email) return alert('Please enter both name and email.');
-      
-      userProfile = {
-        id: email, // Use email as unique identifier
-        email: email,
-        user_metadata: { full_name: name }
-      };
-
-      document.getElementById('loginModal').style.display = 'none';
-
-      // Update header name
-      const fullName = userProfile.user_metadata.full_name || userProfile.email.split('@')[0];
-      document.getElementById('userDisplay').textContent = fullName;
-
-      // Check if Admin
-      if (userProfile.email === 'admin@gmail.com') {
-        document.getElementById('tabbtn-admin').style.display = 'block';
-        document.querySelectorAll('.tab:not(#tabbtn-admin)').forEach(t => t.style.display = 'none');
-        switchTab('admin');
-        loadAdminDashboard();
-      } else {
-        init();
-      }
-    }
-
-    const DEMO_USER = {
-      id: "demo-user",
-      email: "demo@careercoach.ai",
-      name: "Demo User"
-    };
 
     // On page load, bypass auth for Vercel demo
     function checkAuth() {
       const loginModal = document.getElementById('loginModal');
       if (loginModal) loginModal.style.display = 'none';
 
-      const fullName = DEMO_USER.name;
-      document.getElementById('userDisplay').textContent = fullName;
+      document.getElementById('userDisplay').textContent = DEMO_USER.name;
 
-      // Force load the dashboard with backend pre-config
       init();
     }
 
@@ -1510,9 +1462,9 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            id: userProfile.id,
-            email: userProfile.email,
-            name: userProfile.user_metadata.full_name || userProfile.email.split('@')[0]
+            id: DEMO_USER.id,
+            email: DEMO_USER.email,
+            name: DEMO_USER.name
           })
         });
         const data = await res.json();
@@ -1523,7 +1475,8 @@
         // Show onboarding modal on new session
         document.getElementById('onboardingModal').style.display = 'flex';
       } catch (e) {
-        addMessage('system', '⚠️ Backend not connected. Make sure the server is running on port 3001.', '⚠️ Warning');
+        console.error('Init error:', e);
+        addMessage('system', `⚠️ Backend not connected. API: ${API}`, '⚠️ Warning');
       }
     }
 
@@ -1724,14 +1677,18 @@
     }
 
     // ─── RESUME ANALYSIS ────────────────────────────────────────────
-    async function analyzeResume() {
+    async function handleAnalyze() {
       const role = document.getElementById('roleSelect').value;
-      const resume = document.getElementById('resumeInput').value.trim();
-      const fileInput = document.getElementById('pdfInput');
-      const file = fileInput ? fileInput.files[0] : null;
+      // Use globally stored file (set by handlePdfUpload) or fallback to input
+      const file = window.selectedFile || document.getElementById('resumeInput')?.files?.[0];
 
       if (!role) return alert('Please select a target role first');
-      if (!resume && !file) return alert('Please paste your resume text or upload a PDF');
+      if (!file) {
+        alert('Please upload a PDF first');
+        return;
+      }
+      
+      console.log("Selected file:", file);
       
       const user = window.session?.user || DEMO_USER;
 
@@ -1745,14 +1702,11 @@
         const formData = new FormData();
         formData.append('sessionId', user.id);
         formData.append('role', role);
-        if (file) {
-          formData.append('file', file);
-        } else {
-          formData.append('resumeText', resume);
-        }
+        formData.append('file', file); // strictly using "file" key
 
         const res = await fetch(`${API}/analyze-resume`, {
           method: 'POST',
+          // NO headers -> lets browser auto-detect boundary for multipart/form-data
           body: formData
         });
         const data = await res.json();
@@ -2197,6 +2151,16 @@
 
     // Also fire it 10 seconds after plan generation (to catch immediate stalls in demo)
     const originalGeneratePlan = generatePlan;
+
+    // Expose all functions globally so inline onclick="" handlers always work
+    window.handleAnalyze = handleAnalyze;
+    window.handlePdfUpload = handlePdfUpload;
+    window.generatePlan = generatePlan;
+    window.triggerAgent = triggerAgent;
+    window.startInterview = startInterview;
+    window.submitAnswer = submitAnswer;
+    window.switchTab = switchTab;
+    window.logout = logout;
 
     // Run auth check on load
     checkAuth();
