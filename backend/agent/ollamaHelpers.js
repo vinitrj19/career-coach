@@ -5,12 +5,18 @@
 // If Ollama is unreachable (ngrok down), falls back to OpenAI.
 // ─────────────────────────────────────────────────────────────────
 
-const OLLAMA_BASE = process.env.OLLAMA_URL || 'http://localhost:11434';
-const OLLAMA_GENERATE_URL = `${OLLAMA_BASE.replace(/\/+$/, '')}/api/generate`;
+// Strip /api/generate if accidentally included in the env var
+const OLLAMA_BASE = (process.env.OLLAMA_URL || 'http://localhost:11434')
+  .replace(/\/api\/generate\/?$/, '') // remove accidental /api/generate suffix
+  .replace(/\/+$/, '');              // remove trailing slashes
+
+const OLLAMA_GENERATE_URL = `${OLLAMA_BASE}/api/generate`;
 const MODEL_NAME = process.env.OLLAMA_MODEL || 'llama3.2:latest';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || null;
 
+console.log(`[AI ENGINE] Ollama base:     ${OLLAMA_BASE}`);
 console.log(`[AI ENGINE] Ollama endpoint: ${OLLAMA_GENERATE_URL}`);
+console.log(`[AI ENGINE] Model:           ${MODEL_NAME}`);
 if (OPENAI_API_KEY) console.log('[AI ENGINE] OpenAI fallback: ENABLED');
 
 // ─── OPENAI FALLBACK ────────────────────────────────────────────
