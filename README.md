@@ -1,117 +1,139 @@
 # 🚀 Agentic AI Career Coach
 
-An autonomous AI Career Coach that analyzes student profiles, detects skill gaps, assigns quizzes, and provides real-time coaching — powered by a local LLM (Ollama) with cloud accessibility.
+![AI](https://img.shields.io/badge/AI-Agentic-blue)
+![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
+![Frontend](https://img.shields.io/badge/Frontend-JavaScript-yellow)
+![Deployment](https://img.shields.io/badge/Deployed-Vercel%20%2B%20Render-black)
+![Status](https://img.shields.io/badge/Status-Production-success)
 
 ---
 
-## 🏗️ System Architecture
+## 🌟 Overview
 
-```
-User (Internet)
-     ↓
-Frontend (Cloud — Static Hosting / Vercel / GCP)
-     ↓
-Backend API (Cloud — Google Cloud Run / Railway)
-     ↓
-ngrok Secure Tunnel (HTTPS)
-     ↓
-Your MacBook (Ollama on port 11434)
-     ↓
-AI Response → back up the chain → User
-```
+An **Agentic AI-powered Career Coach** that goes beyond chatbots — it **acts autonomously**.
 
-**Key Design**: The LLM (Ollama) runs locally on your laptop for zero API cost and full data privacy. ngrok bridges your local machine to the cloud-deployed backend.
+It analyzes resumes, detects skill gaps, generates personalized plans, and continuously monitors user progress using an **agent loop system**.
 
 ---
 
-## 🛠️ Tech Stack
+## 🎯 Key Features
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | HTML, Vanilla CSS (Glassmorphism), ES6 JavaScript |
-| PDF Parsing | PDF.js (Mozilla) |
-| Backend | Node.js + Express.js |
-| Auth | Supabase Auth (Google/Apple OAuth) |
-| Database | Supabase (PostgreSQL) |
-| AI Engine | Ollama + Llama 3.2 (3B) — local |
-| AI Fallback | OpenAI GPT-3.5 (optional) |
-| Tunnel | ngrok |
+- 📄 Resume Upload & PDF Parsing  
+- 🧠 AI Skill Extraction (Ollama - Llama 3.2)  
+- 📊 Gap Analysis & Readiness Score  
+- 📅 Personalized Learning Plans  
+- 🤖 Agent Loop (continuous monitoring)  
+- 🎤 Mock Interview Evaluation  
+- 📈 Progress Tracking  
 
 ---
 
-## 🚀 Deployment Guide
+## 🧠 What Makes It *Agentic AI*
 
-### Option A: Full Local Development
+Unlike traditional AI systems:
+
+✅ Takes decisions  
+✅ Has a goal (placement readiness)  
+✅ Runs continuously (agent loop)  
+✅ Triggers actions autonomously  
+
+---
+
+## 🏗️ Architecture
+Frontend (Vercel)
+↓
+Backend (Render)
+↓
+ngrok Tunnel
+↓
+Local AI (Ollama - Llama 3.2)
+
+---
+
+## ⚙️ Tech Stack
+
+| Layer       | Technology |
+|------------|-----------|
+| Frontend   | HTML, CSS, JavaScript |
+| Backend    | Node.js, Express |
+| AI Model   | Ollama (Llama 3.2) |
+| Database   | Supabase |
+| Hosting    | Vercel + Render |
+| Bridge     | ngrok |
+
+---
+
+## 🔥 Live Demo
+
+👉 https://career-coach-wine.vercel.app  
+
+---
+
+## 🧪 How It Works
+
+1. Upload Resume  
+2. AI extracts skills  
+3. Gap analysis performed  
+4. Plan generated  
+5. Agent monitors progress  
+
+---
+
+## 🚀 Setup Instructions
+
+### 1️⃣ Clone Repo
 
 ```bash
-# 1. Start AI engine
-ollama serve
-
-# 2. Start backend
+git clone https://github.com/vinitrj19/career-coach.git
+cd career-coach
+2️⃣ Install Backend
 cd backend
 npm install
 npm run dev
-
-# 3. Open frontend
-open frontend/index.html
-```
-
-### Option B: Cloud Deployment (For Demos)
-
-#### Step 1: Start Ollama locally
-```bash
+3️⃣ Start Ollama
 ollama serve
-```
-
-#### Step 2: Tunnel Ollama via ngrok
-```bash
+4️⃣ Start ngrok
 ngrok http 11434
-```
-Copy the HTTPS forwarding URL (e.g. `https://abc-123.ngrok-free.app`)
+5️⃣ Set Environment Variables
+OLLAMA_URL=https://your-ngrok-url
+OLLAMA_MODEL=llama3.2:latest
+6️⃣ Run Frontend
+cd frontend
+npx serve .
+🧩 Challenges Solved
+Connecting local AI → cloud (ngrok bridge)
+PDF parsing in serverless environment
+Session persistence issues
+Real-time AI pipeline debugging
+📌 Future Improvements
+Multi-agent orchestration
+Real company interview integration
+Advanced analytics dashboard
+Fine-tuned AI models
+👨‍💻 Contributors
+👤 Your Name
 
-#### Step 3: Configure backend `.env`
-```env
-OLLAMA_URL=https://abc-123.ngrok-free.app
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-key
+(Add teammates below 👇)
 
-# Optional: safety net if ngrok drops
-OPENAI_API_KEY=sk-your-key
-```
+⭐ Support
 
-#### Step 4: Deploy backend to cloud
-Deploy the `backend/` folder to Google Cloud Run, Railway, or Render.
-Set the environment variables from Step 3.
+If you like this project, give it a ⭐ on GitHub!
 
-#### Step 5: Deploy frontend
-Deploy the `frontend/` folder to Vercel, Netlify, or GCP static hosting.
-Update `CLOUD_BACKEND_URL` in `index.html` to your deployed backend URL.
+📬 Contact
 
-#### Step 6: Update Supabase Auth
-In **Supabase Dashboard → Authentication → URL Configuration**:
-- Set **Site URL** to your deployed frontend URL
-- Add your frontend URL to **Redirect URLs**
+Feel free to connect on LinkedIn 🚀
 
-#### Step 7: Share the link! 🎉
-Judges can now open the public URL and use the full AI system.
-
----
-
-## 🔐 Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SUPABASE_URL` | Yes | Your Supabase project URL |
-| `SUPABASE_KEY` | Yes | Supabase anon/publishable key |
-| `OLLAMA_URL` | Yes | Base URL for Ollama (`http://localhost:11434` or ngrok URL) |
-| `OLLAMA_MODEL` | No | Model name (default: `llama3.2:latest`) |
-| `OPENAI_API_KEY` | No | Fallback if Ollama is unreachable |
 
 ---
 
-## ⚠️ Important Notes
+# 🧠 2. ADD TEAMMATES AS CONTRIBUTORS
 
-- **Frontend NEVER talks to Ollama directly.** All AI requests flow: Frontend → Backend → ngrok → Ollama
-- **ngrok tunnels port 11434** (Ollama), NOT port 3001 (backend)
-- The backend is deployed to cloud and is publicly accessible
-- If ngrok drops during a demo, the OpenAI fallback kicks in automatically
+---
+
+## ✅ OPTION 1 (BEST)
+
+Run:
+
+```bash
+git shortlog -s -n
+## 👨‍💻 Contributors
