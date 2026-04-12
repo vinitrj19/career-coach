@@ -1,4 +1,7 @@
 # 🚀 Agentic AI Career Coach
+![Stars](https://img.shields.io/github/stars/vinitrj19/career-coach)
+![Forks](https://img.shields.io/github/forks/vinitrj19/career-coach)
+![Issues](https://img.shields.io/github/issues/vinitrj19/career-coach)
 
 ![AI](https://img.shields.io/badge/AI-Agentic-blue)
 ![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
@@ -14,6 +17,7 @@ An **Agentic AI-powered Career Coach** that goes beyond chatbots — it **acts a
 
 It analyzes resumes, detects skill gaps, generates personalized plans, and continuously monitors user progress using an **agent loop system**.
 
+Built using local LLMs (Ollama) + cloud integration via ngrok — enabling cost-efficient and controllable AI deployment.
 ---
 
 ## 🎯 Key Features
@@ -27,7 +31,12 @@ It analyzes resumes, detects skill gaps, generates personalized plans, and conti
 - 📈 Progress Tracking  
 
 ---
+## 🧩 Real-World Impact
 
+This system simulates how future AI systems will:
+- Automate decision-making
+- Continuously monitor user goals
+- Replace static tools with intelligent agents
 ## 🧠 What Makes It *Agentic AI*
 
 Unlike traditional AI systems:
@@ -62,7 +71,17 @@ Local AI (Ollama - Llama 3.2)
 | Bridge     | ngrok |
 
 ---
+## 🚀 Why This Project Stands Out
 
+This project was built during a **selective hackathon with ~220 participants (sponsored by ByteXL)**.
+
+Unlike traditional AI chatbots, this system is designed as an **Agentic AI**, meaning:
+
+- It doesn't just respond — it **takes actions**
+- It continuously monitors progress using an **agent loop**
+- It works toward a **goal (placement readiness)**
+
+👉 This reflects the real-world shift from *AI tools → autonomous AI agents*
 ## 🔥 Live Demo
 
 👉 https://career-coach-wine.vercel.app  
@@ -79,41 +98,6 @@ Local AI (Ollama - Llama 3.2)
 
 ---
 
-## 🚀 Setup Instructions
-
-### 1️⃣ Clone Repo
-
-```bash
-git clone https://github.com/vinitrj19/career-coach.git
-cd career-coach
-2️⃣ Install Backend
-cd backend
-npm install
-npm run dev
-3️⃣ Start Ollama
-ollama serve
-4️⃣ Start ngrok
-ngrok http 11434
-5️⃣ Set Environment Variables
-OLLAMA_URL=https://your-ngrok-url
-OLLAMA_MODEL=llama3.2:latest
-6️⃣ Run Frontend
-cd frontend
-npx serve .
-🧩 Challenges Solved
-Connecting local AI → cloud (ngrok bridge)
-PDF parsing in serverless environment
-Session persistence issues
-Real-time AI pipeline debugging
-📌 Future Improvements
-Multi-agent orchestration
-Real company interview integration
-Advanced analytics dashboard
-Fine-tuned AI models
-👨‍💻 Contributors
-👤 Your Name
-
-(Add teammates below 👇)
 
 ⭐ Support
 
@@ -126,14 +110,3 @@ Feel free to connect on LinkedIn 🚀
 
 ---
 
-# 🧠 2. ADD TEAMMATES AS CONTRIBUTORS
-
----
-
-## ✅ OPTION 1 (BEST)
-
-Run:
-
-```bash
-git shortlog -s -n
-## 👨‍💻 Contributors
